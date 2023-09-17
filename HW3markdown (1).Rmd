@@ -1,0 +1,131 @@
+---
+title: "HW3"
+author: "Jiordani Etienne"
+date: '`30 March 2023'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+#Conceptual Questions
+
+##1. What are the common plots and numeric summaries we use to describe a numeric variable’s distribution?
+
+Plots and numerical summaries that describe a numerica variable's distribution are contingency tables, mean, median, standard deviation, IQR, quantiles, and percentiles. We also use bar plots, histograms, box plots, and scatter plots.
+
+##2. What is meant by the term ‘two-way contingency table’?
+
+A two-way contingency table is a table of a combination of two categorical variables that describes the pattern and frequences the observations.
+
+#Programming Questions
+
+##1. Replicate data and modify the code
+```{r echo = TRUE}
+#read in jretienn_beans
+library(tidyverse)
+library(readxl)
+
+beans <- read_excel('jretienn_beans.xlsx')
+
+#exclude Convexarea and EquivDiameter
+beans2 <- beans %>% select(-'ConvexArea',-'EquivDiameter') %>%
+
+#rename ShapeFactor1, ShapeFactor2, ShapeFactor3 and ShapeFactor4 
+rename('SF1' = ShapeFactor1, 'SF2' = ShapeFactor2, 'SF3' = ShapeFactor3, 'SF4' = ShapeFactor4) %>%
+
+#filter class
+filter(Class %in% c('HOROZ', 'DERMASON', 'SEKER', 'BOMBAY', 'SIRA')) %>%
+
+#create a variable with the average
+mutate(avg = (SF1 + SF2 + SF3 + SF4)/4)%>%
+
+#create categorical variables of Roundness 
+mutate(size = if_else(Roundness >=  0.909371, 'large', 
+                        if_else(Roundness >= 0.8721575, 'medium', 'small')))%>%
+
+#reorder rows
+arrange(desc(Roundness))
+
+#subset data
+beans3 <- beans2 %>% select('Class', 'size', 'Roundness', 'AspectRatio', 'Solidity')%>%
+
+#filter for only medium and small variables show
+filter(size %in% c('medium', 'small'))
+```
+
+##2. Create a contengincy table of Class and size variable
+```{r echo = TRUE, eval = TRUE}
+#create a new dataset and filter it
+beans4 <- beans2 %>% select('Class', 'size', 'SF1', 'Area', 'Perimeter', 'MajorAxisLength', 'MinorAxisLength', 'AspectRatio', 'Eccentricity') %>%
+
+#include all observations that have SF1 less than .0081
+filter(SF1 < .0081)
+
+#Create the contingency table
+table(beans4$Class, beans4$size)
+```
+The number 12 on the top left means that there are 12 seeds that are large, BOMBAY, and a shape factor 1 of under .0081
+
+##3. Find the Skew, miniumum, 5th percentile for Area and Perimeter variables
+```{r echo = TRUE, eval = TRUE}
+#make a summary of beans4
+
+#bring in skewness function
+library(e1071)
+beans4%>%
+group_by(Class)%>%
+
+#summarize Area and Perimeter by making formulas
+summarize(avga = mean(Area),
+          skewa = skewness(Area),
+          mina = min(Area),
+          quaa = quantile(Area, probs = .05),
+          avgp = mean(Perimeter),
+          skep = skewness(Perimeter),
+          minp = min(Perimeter),
+          quap = quantile(Perimeter, probs = .05))
+```
+For the BOMBAY class, avga is the average area of all BOMBAY. skewa is the skewness of all BOMBAY seeds. mina is the minimum area out of all of the BOMBAY observations. quaa is the bottom 5% area of all of the BOMBAY. avgp is the average perimeter of all BOMBAY observations. skep is the skewness of all of the BOMBAY.minp is the minimum perimeter from the BOMBAY observations. quap is the bottom 5% of the perimeter of the BOMBAY observations.
+
+##4. Create correlation between variables
+```{r echo = TRUE, eval = TRUE}
+#subset data
+beans5 <- beans4 %>% select('Area', 'Perimeter', 'MajorAxisLength', 'MinorAxisLength', 'AspectRatio')
+
+#create a correlation
+cor(beans5)
+```
+
+##5. Make a side-by-side barplot for Class and size variables
+```{r echo = TRUE, eval = TRUE}
+#create a side-by-side barplot of Class and size variables and add a label
+ggplot(data = beans4, aes(x = Class, fill = size)) + geom_bar(position = 'dodge') + labs(title = 'Seed size for every seed type')
+```
+
+##6. Make a histogram of the Eccentricity variable, make a density plot, and add a title
+```{r echo = TRUE, eval = TRUE}
+#make a histogram of Eccentricity
+ggplot(data = beans4, aes(x = Eccentricity)) + geom_histogram(aes(y = ..density..)) + 
+  
+#make a density plot
+  geom_density() +
+
+#make a title
+  labs(title = 'Histogram of Eccentricity')
+```
+
+##7. Create a histogram at every level of Class
+```{r echo = TRUE, eval = TRUE}
+#make a histogram of Eccentricity
+ggplot(data = beans4, aes(x = Eccentricity)) + geom_histogram(aes(y = ..density..)) + 
+  
+#make it at each level of Class
+facet_wrap(~Class) +
+  
+#make a density plot
+geom_density() +
+
+#make a title
+  labs(title = 'Histogram of Eccentricity')
+```
+
