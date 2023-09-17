@@ -1,0 +1,90 @@
+---
+title: "HW4"
+author: "Jiordani Etienne"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#Loops/Function
+
+##1. Create a for loop for 10!
+
+```{r echo = TRUE, eval = TRUE}
+#create a factorial using for loop
+result=1
+for(index in c(1:10)) {result=result*index}
+print(result)
+```
+
+##2. Make a vectorized function that finds factorial for an input
+
+```{r echo = TRUE, eval = TRUE}
+#create an object with a factorial that can't go over 100 sets default to 10
+fact100 <- function(x=10){
+  if( x>100){
+    return("x is too large.")
+  }
+#create a for loop that starts from 1 and goes to an input x
+  result=1
+  for(index in c(1:x)){ 
+  result = result*index
+  } 
+
+#returns a numerical value
+return(result)
+}
+fact100(x=11)
+```
+
+#More Function Writing
+
+##3. Make a function that converts cm to in
+
+```{r echo = TRUE, eval = TRUE}
+#create object and name function
+convert_cm_to_in <- function(x){
+  return(x/2.54)
+}
+#gives inches of 25 centimeters
+convert_cm_to_in(x=25)
+
+#evaluate inches from 0 to 100 centimeters
+evcon <- c(0:100)
+convert_cm_to_in(evcon)
+```
+
+##4. Make the function round to two decimal places
+
+```{r echo = TRUE, eval = TRUE}
+#make object for function and round it
+rdconv <- function(x){
+  return(round(x/2.54, digits = 2))
+}
+#give all measurements in inches rounded by 2 decimal places 
+rdcv100 <- c(0:100)
+rdconv(rdcv100)
+```
+
+##5. Create a function that adds up change
+
+```{r echo = TRUE, eval = TRUE}
+#make argument for each type of currencey
+count_my_change <- function(dl=0, qu=0, di=0, ni=0, pe=0) {
+  
+dollars = dl*1 + qu*.25 + di*.1 + ni*.05 + pe*.01
+
+#make a statement
+statement = paste('Your total is $', dollars, sep = '')
+
+#returns a numerica value with statement
+return(statement)
+}
+
+#try without inputs
+count_my_change()
+
+#try with inputs
+count_my_change(dl=5, di=2, qu=3, pe=4, ni=1)
+```
