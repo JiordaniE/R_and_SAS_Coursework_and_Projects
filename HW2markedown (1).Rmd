@@ -1,0 +1,75 @@
+---
+title: "HW2MD"
+author: "Jiordani Etienne"
+date: "3/3/23"
+output:
+  html_document:
+    df_print: paged
+---
+
+#Task 1
+
+1.  What is the main object that the tidyverse functions act on? What Base R data structure is it most similar to?
+
+2.  Why do we like to you chaining when possible as opposed to the standard way of calling R functions?
+
+Chaining can help the code be more readable
+
+3.  What is meant by 'long-form' data? Which package from the tidyverse allows us to transform data from wide to long format (and vice-versa)?
+
+Long-form data is when a dataset has a few variables arranged shortly, and observations are arranged to have more vertical distance. Use pivot_longer(). To switch back to wide for, use pivot_wider().
+
+# Task 2
+
+## 1. I first write the code to read in the excel file. Next, I write in r markdown the code chunk:
+
+read in a jretienn_beans
+
+```{r echo = TRUE}
+#read in jretienn_beans
+library(tidyverse)
+library(readxl)
+beans <- read_excel('jretienn_beans.xlsx')
+
+#identify beans
+str(beans)
+```
+
+The data has been read into the object beans. This object is a dataframe that has `r length(beans)` variables and `r length(beans$Area)` observations.
+
+## 2. Use tidyverse and chaining to change the dataset
+
+```{r echo = TRUE, eval = TRUE}
+#exclude Convexarea and EquivDiameter
+beans2 <- beans %>% select(-'ConvexArea',-'EquivDiameter') %>%
+
+#rename ShapeFactor1, ShapeFactor2, ShapeFactor3 and ShapeFactor4 
+rename('SF1' = ShapeFactor1, 'SF2' = ShapeFactor2, 'SF3' = ShapeFactor3, 'SF4' = ShapeFactor4) %>%
+
+#filter class
+filter(Class %in% c('HOROZ', 'DERMASON', 'SEKER', 'BOMBAY', 'SIRA')) %>%
+
+#create a variable with the average
+mutate(avg = (SF1 + SF2 + SF3 + SF4)/4)%>%
+
+#create categorical variables of Roundness 
+mutate(size = if_else(Roundness >=  0.909371, 'large', 
+                        if_else(Roundness >= 0.8721575, 'medium', 'small')))%>%
+
+#reorder rows
+arrange(desc(Roundness))
+```
+
+# Task 3
+
+## 3 I subset the data
+
+```{r echo = TRUE}
+#subset data
+beans3 <- beans2 %>% select('Class', 'size', 'Roundness', 'AspectRatio', 'Solidity')%>%
+
+#filter for only medium and small variables show
+filter(size %in% c('medium', 'small'))
+```
+
+The first value of the Class variable is `r beans3$Class[1]` and the first value of Roundness is `r beans3$Roundness[1]`.
