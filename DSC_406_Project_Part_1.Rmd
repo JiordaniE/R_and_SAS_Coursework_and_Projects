@@ -1,0 +1,326 @@
+---
+title: "College Education"
+author: "Jiordani Etienne"
+date: "2024-02-07"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+Context of Project:
+
+This project is done in my Exploratory Data Analysis for Big Data course. We are allowed whatever big data set we want, so I chose a data set from the U.S. Department of Education, called College Scorecard. The data set gives information of every college and university in the U.S. including its territories.
+
+We are supposed to explore the data and explain our findings while incorporating the code the professor teaches us.
+
+Here, I'm reading in all of the packages I need for the library. rmarkdown helps me write better in rmarkdown, psych lets me summarize my tables in a paged table, summarytools helps me make a document of a summary of my dataset.
+```{r eval = TRUE, echo = TRUE}
+library(tidyverse)
+library(rmarkdown)
+library(ggplot2)
+library(psych)
+library(summarytools)
+library(leaflet)
+```
+
+I'm reading in my csv file with read.csv
+```{r eval = TRUE, echo = TRUE}
+#read in CollegeScorecard.csv
+col_ed <- read.csv('CollegeScorecard.csv')
+```
+
+Here is where I use the select function to get rid of variables that are not necessry and keep only the variables I need. I went from having 3,232 variables down to only 15 variables.
+```{r eval = TRUE, echo = TRUE}
+#selects variables
+col_ed = col_ed %>%
+  select(c(NPT4_PUB, NPT4_PRIV, PPTUG_EF, C150_L4_POOLED_SUPP, OPEFLAG, PREDDEG, UGDS_WHITE, UGDS_BLACK, UGDS_HISP, UGDS_ASIAN, HBCU, ADM_RATE, LATITUDE, LONGITUDE, STABBR))
+```
+
+This code chunk is where I slected the rows where only the states of the United States are. 
+```{r eval = TRUE, echo = TRUE}
+#make a list of all of the states that I want to include
+states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY")
+
+#filter out all of the territories by including only states and DC
+col_ed = col_ed %>% filter(STABBR %in% states) %>% paged_table()
+```
+
+Paged_table function is good for looking at multiple rows of data in R markdown. When I used the function, it shows all 15 of my variables in a page format.
+```{r eval = TRUE, echo = TRUE}
+#look at dataset
+paged_table(col_ed)
+```
+
+The lapply function allows us to make variables numeric. I selected all variables except for the state variable, and made them all numeric variables.
+```{r eval = TRUE, echo = TRUE}
+#change characters into numeric variables
+col_ed[,1:14] = lapply(col_ed[,1:14], as.numeric) #lapply makes a list
+```
+Glimpse is good at looking at the first 6 rows of your dataset.
+```{r eval = TRUE, echo = TRUE}
+#quick look at the data
+glimpse(col_ed)
+````
+
+The if function converts the list into a data frame.
+```{r eval = TRUE, echo = TRUE}
+#converts col_ed from a list to a dataframe
+  if (is.list(col_ed)) {
+  col_ed = as.data.frame(col_ed)}
+```
+
+```{r eval = TRUE, echo = TRUE}
+paged_table(col_ed)
+```
+
+Below is the rename function, which is good for renaming variables. I renamed all my variables except for the HBCU variable.
+```{r eval = TRUE, echo = TRUE}
+#rename variables
+col_ed = col_ed %>% 
+  rename(cos_pub = NPT4_PUB, cos_priv = NPT4_PRIV, ful_enl = PPTUG_EF, grad_rt = C150_L4_POOLED_SUPP, nfi_aid = OPEFLAG, pred_aw = PREDDEG, white = UGDS_WHITE, black = UGDS_BLACK, hisp = UGDS_HISP, asian = UGDS_ASIAN, adm_rt = ADM_RATE, state = STABBR, lat = LATITUDE, long = LONGITUDE)
+```
+
+## Variable Meanings
+
+**cos_pub** - The average  annual cost of students receiving financial aid attending public schools 
+
+**cos_priv** - The average  annual cost of students receiving financial aid attending private schools 
+
+**ful_enl** - The proportion of full time undergraduate students
+
+**grad_rt** - Graduation rate of up to 8 years within entry of the school, cohorts ending in 2018 to 2019
+
+**nfi_aid** - Schools that don't offer financial aid
+
+**pred_aw** - Predominate degree level offered by the school
+
+**white** - Proportion of white students of the school
+
+**black** - Proportion of black students of the school
+
+**hisp** - Proportion of Hispanic students of the school
+
+**asian** - Proportion of Asian students of the school
+
+**adm_rt** - Admission rate of the school
+
+**state** - State of where the school is located
+
+**lat** - Latitudinal coordinates of the school
+
+**long** - Longitudinal coordinates of the school
+
+Below is the mutate function. The mutate function is being used to convert one variable to a factor variable. Factor is good because it reduces the amount of resources taken up by R.
+```{r eval = TRUE, echo = TRUE}
+#make state a factor variable
+col_ed = col_ed %>%
+  mutate(state = as.factor(state)) 
+```
+
+```{r eval = TRUE, echo = TRUE}
+#look at dataset for state
+glimpse(col_ed)
+```
+
+Here, I'm making a density plot of the cost of living for public colleges and universities. The density plot is right skewed, which means that there are less and less schools that have a so much in terms of cost of living. Cost of living might be due to the students living in an expensive area, or the school not providing a lot of financial assistance to students.
+```{r eval = TRUE, echo = TRUE}
+#makes a density plot for co_pub
+cos_pub_dens <- ggplot(col_ed, aes(x = cos_pub)) +
+  geom_density(fill = "darkblue")
+cos_pub_dens
+```
+
+
+The density plot is right-skewed, which indicates that the average is above the median. The skewness might indicate that as the cost of private schools increases, there are less schools at each cost range. The cost may be due to less help or funding from the schools to the students, or schools that are located in very expensive areas such as California. Private school costs are much higher than public school costs, so students might be struggling harder because private schools are funded by the government.
+```{r eval = TRUE, echo = TRUE}
+#makes a density plot for cos_priv
+cos_priv_dens <- ggplot(col_ed, aes(x = cos_priv)) +
+  geom_density(fill = 'lightgreen')
+cos_priv_dens
+```
+
+Below, I made a histogram about the admissions rate, and it is left skewed, indicateding that there are less schools with higher admission rates than lower admission rates. 
+
+I also made a box plot, which shows the admission rate. The box plot reveals that the median and interquartile range is located where the higher admission rates are. The boxplot also shows that it is negatively skewed with a lot of outliers toward the lower end of the graph. Box plots are good at showing skewness, outliers, the IQR, the range, and the median of data.
+
+The code chunk also has the average admissions rate of all colleges and HBCUs The average admissions rate for all colleges is 73% and for HBCUs is 69%.
+```{r eval = TRUE, echo = TRUE}
+#histogram of adm_rt
+adm_rt_hist <- ggplot(col_ed, aes(x = adm_rt)) +
+  geom_histogram(fill = "lightyellow", col=I("black"))
+plot(adm_rt_hist)
+
+#make box plot of adm_rt
+adm_rt_bp <- ggplot(col_ed, aes(y = adm_rt)) +
+  geom_boxplot(fill = "violet")
+plot(adm_rt_bp)
+
+#average adm_rt
+adm_rt_men <- mean(col_ed$adm_rt, na.rm = TRUE)
+adm_rt_men
+
+#average admission rates for HBCUs
+adm_HBCU_men <- col_ed %>% filter( HBCU == 1 )%>% summarise(mean_adm_rt = mean(adm_rt, na.rm = TRUE))
+adm_HBCU_men
+
+```
+
+Below, I made a bar chart of the average admissions rate of every school grouped by each state. I used the group_by command to group the states together. group_by is good for organizing your data into groups to discover patterns.
+```{r eval = TRUE, echo = TRUE}
+#make a new variable of the average state admissions rate
+state_avg_adm <- col_ed %>%
+  group_by(state) %>%
+  summarize(avg_adm = mean(adm_rt, na.rm = T))
+
+#get rid of NA values
+state_avg_adm_bar <- na.omit(state_avg_adm)
+
+#make the bar chart
+state_adm_col <- ggplot(state_avg_adm, aes(y = reorder(state,avg_adm))) +
+  geom_bar(aes(weight = avg_adm),fill = "#0892d0")
+plot(state_adm_col)
+```
+
+Below is the proportion of HBCUs out of all of the schools in the United States, which is 1.7%.
+```{r eval = TRUE, echo = TRUE}
+#proportion of HBCUs out of all schools
+HBCU_prop <- mean(col_ed$HBCU, na.rm = T)
+```
+
+I used the filter function to subset my data set to only show schools located in the united states. The filter function is good for subsetting data to look for something specific.
+```{r eval = TRUE, echo = TRUE}
+#subset to only schools in North Carolina
+col_cord_nc <- col_ed %>% filter(state == "NC")
+```
+
+I used the paged_table function to look at the subsetted data set.
+```{r eval = TRUE, echo = TRUE}
+paged_table(col_cord_nc)
+```
+
+Below is where I narrowed down my new dataset to only the coordinate variables or latitude and longitude. The brackets and colons are another good way to subset your data by taking a range of variables you need.
+```{r eval = TRUE, echo = TRUE}
+#make dataset with just the coordinates
+col_cord <- col_cord_nc[,13:14]
+head(col_cord)
+```
+
+I used the any(is.na) function to see if there are any missing values in my data set, and it came out as "TRUE." The function any(is.na) is useful for seeing if you have any missing values.
+```{r eval = TRUE, echo = TRUE}
+#check if there are missing values
+any(is.na(col_cord))
+```
+
+The complete.cases function is used to show you all of the rows with all of the values filled in. I created a new dataset to briefly see my completed rows.
+```{r eval = TRUE, echo = TRUE}
+#check what rows do not have missing values
+rowscomp <- complete.cases(col_cord)
+col_cord = col_cord[rowscomp,]
+paged_table(col_cord)
+```
+
+Below is where I'm getting rid of NA values for the spatial data. na.omit is a good command to get rid of NA values.
+```{r eval = TRUE, echo = TRUE}
+#omit missing data
+col_cord = col_cord %>%
+  na.omit(col_cord)
+```
+
+Below is a map of all colleges and universities in North Carolina. It seems like many schools are located in highly populated areas. I used commands from the leaflet package like "addTiles," which gets the map from Google Maps. Then I used the "setView" command to align my view of the map. Finally, I used the "addCircleMarkers" command to plot my spatial data. The leaflet package is really good a plotting spatial data.
+```{r eval = TRUE, echo = TRUE}
+#make a map of all schools in North Carolina
+col_cord %>% leaflet() %>% addTiles() %>% #gets map from Google Maps
+  setView(lng = -80.1, lat = 35.4, zoom = 6.5) %>%
+   addCircleMarkers(data = col_cord, radius = 1, color = "darkred")
+```
+
+This is where I make and new data set based on the original col_ed data set, and split up the data set by states. The split function is good if you have a large data set and you want to divide it up into different data sets with certain characterists.
+```{r eval = TRUE, echo = TRUE}
+#split the col_ed into states
+col_ed_split <- split(col_ed, f = col_ed$state)
+```
+
+Here, calling my data set that I jusrt split up into states. I'm using double brackets to call my data set by the state North Carolina. Double brackets is useful if you wanted to call a split data set with very specific characteristics.
+```{r eval = TRUE, echo = TRUE}
+#call the split dataset with only NC observations
+nc_call <- col_ed_split[["NC"]]
+```
+
+Below I'm using the recode function so I can rename certain chategorical variables. I set 1 to be NC, 2 to be SC, and 3 to be any other state. The recoding is useful if you want to label all of the categories that you find usefull and you don't feel like renaming all of the other categories of the variable. Recoding also lets you keeping the existing variables.
+```{r eval = TRUE, echo = TRUE}
+#make a new data frame called carolinas
+only_carolinas <- col_ed %>%
+  mutate(carolinas = recode(state, #making a new variable with renamed observations
+                            "NC" = 1,
+                            "SC" = 2,
+                            .default = 3)) %>%
+  select(state, carolinas)
+```
+
+Here, I'm using the "describe" function from the psych package to describe my data set. The "describe" function is useful if you want a paged summary of all your in R Markdown. It even includes stuff that base R doesn't have like mad, skew, and trimmed.
+```{r eval = TRUE, echo = TRUE}
+#make a new dataset for describing col_ed
+col_ed_describe <- col_ed
+  describe(col_ed_describe)
+```
+
+Below, I'm getting a description of my variables grouped by the HBCU variable. I'm using the "describeBy" command from the psych package to get a summary of my data. In contrast to the "describe" command, the "describeBy" command is really good at giving you summaries of your data set based on the the conditions of a variable.
+```{r eval = TRUE, echo = TRUE}
+#describe col_ed_describe by HBCU
+describeBy(col_ed_describe, group = col_ed_describe$HBCU)
+```
+
+I'm using the "dfSummary" command from the "summarytools" package to get a summary of my data in the col_ed_describe data set. I made a named the summary col_ed_results, and it displays a summary of my data in an HTML format with some graphs to explain the data. The "dfSummary" command is really good at describing the data in various ways.The command gives you a graphed distribution of all you variables, summary statistics, number of missing values, and more.
+```{r eval = TRUE, echo = TRUE}
+#Use the Summarytools package to summarize col_ed_describe
+col_ed_results <- dfSummary(col_ed_describe)
+view(col_ed_results)
+```
+
+Below is where I'm making a new data set based on the original col_ed data set. I'm putting NA where ever the value 0 appears in the data set. I narrowed down my dataset to highlight the HBCU column, because all of the 0s in it became NA values. the "data[data == 0] <- NA" command is good if you want to just make the 0 values NA so they can be tossed out since sometimes 0 values are not useful.
+```{r eval = TRUE, echo = TRUE}
+#make new dataset based on col_ed_describe
+miss0 <- col_ed
+
+#enter 0 values with NA
+miss0[miss0 == 0.00000] <- NA
+
+#only show HBCU and adm_rt
+miss0 = miss0[,11:12]
+```
+
+Below is where I'm making a new data set from the col_ed data set. I'm only keeping four variables from the old data set, which is HBCU, lat, long, and state.
+```{r eval = TRUE, echo = TRUE}
+#make a new dataset based on col_cord
+col_cord_va <- col_ed %>%
+  select(c(HBCU, lat, long, state))
+```
+
+I'm making new variables for the coordinates of the state Virgina, grouped by HBCU. I took the mean of the spatial data. We are using the "mutate function to add a two new variables but with a calculation, and the calculation is the mean. The mutate calculation is useful if you want a quick way to make a new variable with calculated observations.
+```{r eval = TRUE, echo = TRUE}
+#make new variables of coordinates for only Virginia grouped by HBCU
+col_cord_va %>%
+  filter(state == "VA") %>%
+  group_by(HBCU) %>%
+  mutate(mean_lat = mean(lat)) %>%
+  mutate(mean_long = mean(long))
+```
+
+Below, I'm changing the last six columns to factor variables. Usng "lapply" and "as.factor" function to turn the last 6 columns to factor variables is good for the computer so R does not take too much of your computer's resources.
+```{r eval = TRUE, echo = TRUE}
+#make a new dataset called col_ed_results
+col_ed_factor <- col_ed
+
+#change the first nine variables to factor
+col_ed_factor[,10:15] = lapply(col_ed_factor[,10:15], as.factor)
+
+glimpse(col_ed_factor)
+```
+
+Below I made a histogram of admission rates. The histogram is left skewed, which means that there are far less schools that have lower admission rates than schools with higher admision rates. The "hist" function is good for making histograms, and can be customized with the a certain number of bins and colors. The histogram is good at showing the shape and spread of the data.
+```{r eval = TRUE, echo = TRUE}
+#make a histogram of adm_rt
+hist(col_ed$adm_rt, col = rainbow(10))
+```
+
