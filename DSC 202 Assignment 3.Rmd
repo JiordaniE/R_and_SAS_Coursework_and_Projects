@@ -1,0 +1,67 @@
+---
+title: "DSC 202 Assignment 3"
+author: "Jiordani Etienne"
+date: "2024-03-06"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+This assignment is about visualizing a dataset of my choosing with great detail, paying attention to the 5 Principles of Accessibility. The principles include:
+1. Add Alt Text
+
+2. Takeaway Title
+
+3. Label Data
+
+4. Color Contrast
+
+5. Use White Space
+
+I made a time series model of the proportion of people with a bachelor's degree or higher by gender.
+
+I used the dataset named College_Time.
+
+```{r eval = TRUE, echo = TRUE}
+#read in packages
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(rmarkdown)
+```
+
+```{r eval = TRUE, echo = TRUE}
+#read in the dataset
+col_att <- read_excel('College_Time.xlsx')
+```
+The dataset contains time series data of the proportion of people who have a bachelor's degree or higher who are 25 years old and older. The dataset goes from 2013 until 2021, and it has two variables, one for men, and the other for women.
+
+The dataset was pulled from Sage Data, which is a database; Sage Data got the data from the World Bank.
+
+```{r eval = TRUE, echo = TRUE}
+#look at paged table
+paged_table(col_att)
+```
+
+
+```{r eval = TRUE, echo = TRUE}
+#assign colors to list
+colors <- c("Women" = "#EF0107", "Men" = "#0437F2")
+```
+
+```{r eval = TRUE, echo = TRUE}
+#make line chart
+col_tim <- ggplot(col_att) +
+  geom_line(aes(x = Time, y = Female_College, group = 1,  color = "Women"), linewidth = 2) +
+  geom_line(aes(x = Time, y = Male_College, group = 1, color = "Men"), linetype = 6, linewidth = 2) +
+  labs(title = "Line Chart of the Percentage of People with at Least a Bachelor's", 
+       x = "Time (in years)", y = "% of 25+ Year Olds with at Least a Bachelor's,", color = "Legend") +
+  scale_color_manual(values = colors) + #adds legend from object named "colors"
+  annotate("text", x = 4, y = 34.5, label = "Women") + #makes label for Women
+  annotate("text", x = 4, y = 34, label = "|", size = 5) + 
+  annotate("text", x = 6, y = 34, label = "|", size = 5) + 
+  annotate("text", x = 6, y = 33.5, label = "Men",) #makes label for Men
+plot(col_tim)
+```
+
+The line chart shows that since 2014, the proportion of women who have a bachelors degree or higher is more than men. In addition, Since 2020, there is a decline in college attendees of on average 2.5 percentage points, which maybe due to the Covid-19 lockdown. In 2021, men with at least a bachelor's degree are sitting at around 33.9% and women at 36.1%.
