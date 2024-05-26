@@ -1,0 +1,263 @@
+---
+title: "DSC 406 Project Part 2"
+author: "Jiordani Etienne"
+date: "2024-03-11"
+output: html_document
+---
+This project was done in DSC 406, and it is the second project. This project goes over machine learning, data distributions, and summary statistics. The goal of this project was to produce results from our data and present it to the class. The findings are below.
+
+The packages below are being read in to help run the codes for the project. The package dlookr is good for the plot_normality command. The skimr package is good for using the skim command. The explore package is good for using the explore command. The psych package is useful for the plot and cor.test functions.
+```{r eval = TRUE, echo = TRUE}
+library(tidyverse)
+library(rmarkdown)
+library(dlookr)
+library(skimr)
+library(explore)
+library(janitor)
+library(psych)
+library(dendextend)
+library(pheatmap)
+library(GGally)
+library(BBmisc)
+library(tableone)
+```
+
+The dataset "Collegescorecard" is being read into R.
+```{r eval = TRUE, echo = TRUE}
+#read in CollegeScorecard.csv
+col_ed <- read.csv('CollegeScorecard.csv')
+```
+
+The code chunk below is filtering the variables so that I have only the important variables I need.
+```{r eval = TRUE, echo = TRUE}
+#selects variables
+col_ed = col_ed %>%
+  select(c(NPT4_PUB, NPT4_PRIV, PPTUG_EF, C150_L4_POOLED_SUPP, OPEFLAG, PREDDEG, UGDS_WHITE, UGDS_BLACK, UGDS_HISP, UGDS_ASIAN, HBCU, ADM_RATE, LATITUDE, LONGITUDE, STABBR))
+```
+
+The code chunk below is eliminaing all of the observations that aren't states.
+```{r eval = TRUE, echo = TRUE}
+#make a list of all of the states that I want to include
+states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY")
+
+#filter out all of the territories by including only states and DC
+col_ed = col_ed %>% filter(STABBR %in% states) %>% paged_table()
+```
+
+The code chunk is converting the first 14 variables to numeric variables.
+```{r eval = TRUE, echo = TRUE}
+#change characters into numeric variables
+col_ed[,1:14] = lapply(col_ed[,1:14], as.numeric) #lapply makes a list
+```
+Below, we are taking a look at the data set
+```{r eval = TRUE, echo = TRUE}
+#quick look at the data
+glimpse(col_ed)
+````
+
+Below, the code is converting col_ed from a list to a dataframe for better data analysis
+```{r eval = TRUE, echo = TRUE}
+#converts col_ed from a list to a dataframe
+  if (is.list(col_ed)) {
+  col_ed = as.data.frame(col_ed)}
+```
+
+Below, the code is renaming variables
+```{r eval = TRUE, echo = TRUE}
+#rename variables
+col_ed = col_ed %>% 
+  rename(cos_pub = NPT4_PUB, cos_priv = NPT4_PRIV, ful_enl = PPTUG_EF, grad_rt = C150_L4_POOLED_SUPP, nfi_aid = OPEFLAG, pred_aw = PREDDEG, white = UGDS_WHITE, black = UGDS_BLACK, hisp = UGDS_HISP, asian = UGDS_ASIAN, adm_rt = ADM_RATE, state = STABBR, lat = LATITUDE, long = LONGITUDE)
+```
+
+Below, I'm getting the proportion of schools that predominantly award a bachelors degree. It seems like 30.6% of the schools predominantly award a bachelors degree. I used the janitor package.
+```{r eval = TRUE, echo = TRUE}
+#proportion of schools whose predominant degree is a bachelor's degree
+
+#show some data
+col_ed |> select(pred_aw)
+
+#filter only 4 pred_aw
+col_ed |> filter(pred_aw == 4)
+
+
+#show proportion
+col_ed |> 
+  tabyl(pred_aw) 
+
+
+#show proportion and arrange by n
+col_ed |> 
+  tabyl(pred_aw) |> 
+  adorn_pct_formatting() |> 
+  arrange(desc(n))
+```
+
+
+Below, shows a bar chart of the average graduation rate by state. Utah has the highest graduation rate, and North Carolina is ranked one of the lowest.
+```{r eval = TRUE, echo = TRUE}
+#bar chart of average graduation rate by state
+
+#make a new variable of the average state graduation rate
+state_avg_grad <- col_ed %>%
+  group_by(state) %>%
+  summarize(avg_grad = mean(grad_rt, na.rm = T))
+
+#get rid of NA values
+state_avg_grad_bar <- na.omit(state_avg_grad)
+
+#make the bar chart
+state_grad_col <- ggplot(state_avg_grad, aes(y = reorder(state,avg_grad))) +
+  geom_bar(aes(weight = avg_grad),fill = "pink")
+plot(state_grad_col)
+```
+
+This shows the distribution of all races in the dataset. According to the graphs, Q-Q Plots for the White and Asian variables seem to follow the closest to a trend, but in general, none of the races really follow a trend, which means none of the races are normally distributed. I used the dlookr package. plot_normality is good for looking at the distribution of your variables.
+```{r eval = TRUE, echo = TRUE}
+#make distribution of variables
+col_ed %>% select(white:asian) %>% plot_normality()
+```
+
+This provides the summary statistics for all variables. It says that I have 6,386 rows and 15 columns, with 1 column being character and the 14 others being numeric. I used the skimr package. The skim command is good for giving better summary statistics than the summary statistics given in Base R. The new summar statistics are missing values, completion of the column, and a miniature histogram.
+```{r eval = TRUE, echo = TRUE}
+super_results <- skim(col_ed)
+super_results
+```
+
+This makes an interactive dashboard of the col_ed dataset. I used the explore package. The explore function is good for making an interactive dashboard of all your variables. The dashboard can reveal the distribution of the data using density plots, box plots, it can also show some summary statitics all without using a lot of code.
+```{r eval = TRUE, echo = TRUE}
+#make interactive dashboard
+explore(col_ed)
+```
+
+This gives a scatterplot of admission rate and graduation rate. A lot of the points do not seem to follow a pattern. The plot function is good for plotting points on a graph for each variable.
+```{r eval = TRUE, echo = TRUE}
+#plot grad_rt and adm_rt
+col_ed %>% select(adm_rt, grad_rt) %>% plot()
+```
+
+The code chunk shows the Pearson's correlation between admission rate and graduation rate, which is not statistically significant. There is also 0 inside the confidence interval, which enforces the high p-value of .3227. The cor.test is from the psych package and it's good at giving a Pearson's correlation with a p-value, confidence interval, and correlaiton coefficient.
+```{r eval = TRUE, echo = TRUE}
+#pearson correlation
+cor.test(col_ed$adm_rt, col_ed$grad_rt)
+```
+
+Below is a linear model between admission rate and graduation rate plotted using the psych package. the lm function is good to get some visuals like QQ plots and residual plots.
+```{r eval = TRUE, echo = TRUE}
+#make linear model
+lm(col_ed$adm_rt ~ col_ed$grad_rt) %>% plot()
+```
+
+Below is also an ANOVA between admssion rate and graduation rate using the psych package. According to the ANOVA, admission rate is not statistically significant with graduation rate. This may indicate that there is not a relationship between graduation rate and admission rate.
+```{r eval = TRUE, echo = TRUE}
+#make ANOVA
+col_model <- lm(col_ed$grad_rt ~ col_ed$adm_rt)
+col_model
+summary(col_model)
+```
+
+Below is where I'm preparing to make a dendrogram. I'm making a variable that has the average admission rate by state.
+```{r eval = TRUE, echo = TRUE}
+#make a new variable of the average state admissions rate
+state_avg_adm <- col_ed %>%
+  group_by(state) %>%
+  summarize(avg_adm = mean(adm_rt, na.rm = T))
+```
+
+Below is where I make the dendrogram. I think Wyoming is alone because it has the highest admission rate on average. The groups were probably formed by schools that generally have a harder time getting into. R is probably trying to relate it to the top of the dendrogram by showing how easy some schools are to get into.
+```{r eval = TRUE, echo = TRUE}
+#make a distance for dendrogram
+avg_adm_dist <- dist(state_avg_adm)
+
+#get average linkage
+avg_adm_link <- as.dendrogram(hclust(avg_adm_dist, method = "average"))
+
+#set categorical variable "state" as the measure
+labels(avg_adm_link) <- paste(state_avg_adm$state)[order.dendrogram(avg_adm_link)]
+
+#make the dendrogram
+avg_adm_dend <- color_branches(avg_adm_link, k = 5, col = c("#FF3030", "#FFA500", "#7FFF00", "#1874CD", "#8B668B"),
+                         groupLabels = TRUE)
+
+par(cex = .7)
+plot(avg_adm_dend) #uses unsupervized machine learning
+```
+
+```{r}
+resultskim <- skim(col_ed)
+resultskim
+```
+
+```{r}
+col_ed[,7:10] %>% round(2) %>% corr.test(alpha = .05)
+```
+
+```{r}
+cor_omk <- col_ed
+
+cor_omk = cor_omk %>%
+  select(c(white, black, hisp, asian))
+
+cor_om <- na.omit(cor_omk)
+```
+
+
+```{r}
+#name correlation to make a heatmap
+corheat <- cor(cor_om)
+
+#make heatmap with numbers
+pheatmap(cor_om)
+```
+
+```{r}
+heatmap(as.matrix(cor_om))
+```
+
+```{r}
+glimpse(cor_om)
+```
+
+```{r}
+cor_om %>% ggpairs
+```
+
+```{r}
+distbud <- dist(cor_om)
+
+dendrobud <- hclust(distbud, method = "average")
+
+plot(dendrobud, hang = -1, labels = cor_om$black)
+```
+
+```{r}
+cor_pred_all <- col_ed %>%
+  mutate(degree = itostr(pred_aw))
+
+cor_pred_all$degree <- recode(cor_pred_all$degree,
+         "3" = 'Bachelors',
+         "4" = 'Post Bachelors',
+         .default = 'After HS')
+  
+cor_pred_all = cor_pred_all%>% select(degree, HBCU, grad_rt, cos_pub)
+
+cor_pred_all %>% ggpairs(ggplot2::aes(colour = degree))
+```
+
+```{r}
+coltab <- CreateTableOne(data = col_ed)
+coltab
+```
+
+```{r}
+cor_pred_all$HBCU <- recode(cor_pred_all$HBCU,
+         "0" = 'HBCU',
+         "1" = 'Not HBCU')
+collist <- c("grad_rt", "cos_pub")
+
+catecol <- c("HBCU", "degree")
+
+tab2 <- CreateTableOne(data = cor_pred_all, vars = collist, factorVars = catecol, 
+                         strata = "degree", smd = T)
+tab2
+```
+
