@@ -1,0 +1,75 @@
+---
+title: "DSC 406 Week 9"
+author: "Jiordani Etienne"
+date: "2024-03-06"
+output: html_document
+---
+I used the psych package to visualize a scatterplot. I also made a pearson's correlation with base R and a linear model with the psych package. I also made an anova with the summary command in base R.
+
+Below is where I read in packages, read in the datasets, and plotted the scatterplot with variables W and GF. There's a positive relationship between the two.
+```{r}
+library(psych)
+library(tidyverse)
+ds <- read.csv("NHL.csv")
+
+#plot function plots a scatter plot with the psych package
+ds %>% select(W,GF) %>% plot()
+```
+
+The scatter plot contains W on the x-axis and GA in the y-axis, and there is an inverse relationship between the two.
+```{r}
+#plot goals
+ds %>% select(W,GA) %>% plot()
+```
+
+There is a pearson correlation test run on W and GA, and the p-value is statistically significant. It shows that there is a could be a relationship between wins, and goals against. There's also a strong negative correlation coefficient of .88.
+```{r}
+#do pearson correlation test
+cor.test(ds$W, ds$GA)
+```
+
+Below is a linear model of Wins and Goals Against. The residual plot has evenly distributed points and the Q-Q plot follows the line, which indicates that the linear model is normally distributed.
+```{r}
+#get the linear model
+lm(ds$W ~ ds$GA) %>% plot()
+```
+
+Below is are summary statistics for the linear model of W and GA. GA has a negative slope coefficient of -.22 and it is statistically significant with W. The adjusted R-Square is also high at .77.
+```{r}
+mymodel <- lm(ds$W ~ ds$GA)
+mymodel
+summary(mymodel) #ANOVA
+```
+
+## Homework
+
+Below, I made a scatterplot of PTS and L. There seems to be a negative relationship with the amount of points in a game and the amount of losses.
+```{r}
+#homework choose two unique variables to expalain correlation and model
+
+#make new dataset
+winner <- read.csv("NHL.csv")
+
+winner %>% select(PTS, L) %>% plot()
+```
+
+Below, I made a pearson correlation between points earned and losses, and points is statistically significant with losses. There is a very strong negative correlation coefficient of -.986, which means that there is a negative relationship with points scored and losses.
+```{r}
+#meake pearson correlation
+cor.test(winner$PTS, winner$L)
+```
+
+Below is a visual of the linear model using the psych package. The residual plot has pints evenly distributed, and the Q-Q Plot has points that closely follow the line. This indicates that the linear model is normally distributed.
+```{r}
+#get the linear model summary
+lm(winner$L ~ winner$PTS) %>% plot()
+```
+
+```{r}
+#make summary statistics
+winmod <- lm(winner$L ~ winner$PTS)
+winmod
+summary(winmod)
+```
+
+I found that there is a strong negative correlation with the number of points scored and number of losses a team has; the correlation coefficient was =.986. Losses was treated a dependent variable, and points was treated as an indenpendent variable. As points increase by one unit, the amount of losses of a team decreases by .4826. The Q-Q plot shows that thre is a strong relationship because the points are along the line. The p-value was also significant at the 5% level.
