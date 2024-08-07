@@ -1,0 +1,91 @@
+---
+title: "DSC 406 Week 11"
+author: "Jiordani Etienne"
+date: "2024-04-17"
+output: html_document
+---
+I used the psych package with the NHL file. I renamed a variable and remove missing information. With the psych package, I made a signifcance and correlation matrix of all the variables. I also made a heatmap of the variables and dendrograms with machine learning, one with base R and the other with the pheatmap package. I made a density plot matrix to show how the data is distributed between points and wins. I made a dendrogram with four clusters and colored them. The dendrogram used average distance and it's looking at the relationship between the hockey teams.
+
+Reading in the packages
+```{r eval = TRUE, echo = TRUE}
+library(tidyverse)
+library(rmarkdown)
+library(psych)
+```
+
+Below is where I read in the dataset
+```{r eval = TRUE, echo = TRUE}
+#read in the dataset
+ds <- read.csv("NHL.csv")
+head(ds)
+```
+
+rename column name X to Team. 
+```{r eval = TRUE, echo = TRUE}
+#renames column name to Team
+newdata = 
+  ds %>% na.omit() %>% rename(Team = X)
+```
+
+Checking out the dataset
+```{r eval = TRUE, echo = TRUE}
+#looking at the dataset
+glimpse(newdata)
+```
+
+Makes a correlation matrix and significance matrix between all of the variables.
+```{r eval = TRUE, echo = TRUE}
+#checks if p-values are significant, uses .05 as alpha
+newdata[,3:10] %>% round(2) %>% corr.test(alpha = 0.05)
+```
+
+Below is a pearson correlation between all fo the variables
+```{r eval = TRUE, echo = TRUE}
+#makes pearson correlation between all variables
+correlation <- cor(newdata[,3:10])
+```
+
+Makes a heatmapt of correlation matrix. We needed to calculated the correlation matrix first.The light colors has weak coorrelation, dark colors indicate a strong correlation.
+```{r eval = TRUE, echo = TRUE}
+#makes a correlatin matrix from the correlation object
+library(pheatmap)
+pheatmap(correlation, display_numbers = TRUE) #display_numbers shows numbers. Just delete display_numbers to get rid of numbers
+```
+
+Creates a heatmap with Base R
+```{r eval = TRUE, echo = TRUE}
+#makes a heatmap
+heatmap(correlation)
+```
+
+Makes a correlation matrix and density plot with the GGally package. OL looks like it's the most normally distributed, and PTS and GF seem to have a positive relationship.
+```{r eval = TRUE, echo = TRUE}
+#makes a correlation and density plot matrix
+library(GGally)
+newdata[,5:7] %>% ggpairs()
+```
+
+Makes a dendrogram of all the teams using the average linkage method
+```{r eval = TRUE, echo = TRUE}
+library(dendextend)
+
+distances <- dist(newdata) #calculates the distance
+dendro <- hclust(distances, method = "average") #uses average linkage method and name dendrogram: dendro
+#can call avaerage ave
+plot(dendro, hang = -1, labels = newdata$Team) #hang organizes dendrogram
+```
+
+Makes a dendrogram for teams separated by 4 colored branches using the average linkage method.
+```{r eval = TRUE, echo = TRUE}
+graph <- as.dendrogram(hclust(distances, method = "ave"))
+
+labels(graph) <- paste(newdata$Team)[order.dendrogram(graph)] #organizes labels
+
+dend <- color_branches(graph, k = 4, col=c("#CD0000", "#548B54", "#00008B", "#FF00FF"), #adds colors
+
+groupLabels = TRUE) #shows labels
+
+par(cex = 0.7)
+plot(dend)
+```
+
