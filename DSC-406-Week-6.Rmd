@@ -1,0 +1,106 @@
+---
+title: "Incidents Spatial"
+author: "Jiordani Etienne"
+date: "2024-02-14"
+output: html_document
+---
+In this week, we I learned how to make a map, subset data, make new variable, and make a histogram. I also showed all the completed rows from incomplete data.
+
+We are reading in the dataset
+```{r}
+mydata <- read.csv("incidents.csv")
+```
+
+```{r}
+library(rmarkdown)
+library(leaflet)
+library(tidyverse)
+```
+
+
+Makes a new variable by renaming them as 1 or 2, and if neither 3 because you don't feel like categorizing all of the other categories.
+```{r}
+#make a new variable by renaming them as 1 or 2, if neither, then 3
+#.default gets rid of all of the other variables that you don't want to categories
+mydata %>%
+  mutate(new_variable = recode(district,
+                               "North" = 1,
+                               "Downtown" = 2,
+                               .default = 3)) %>%
+  select(district, new_variable)
+paged_table(mydata)
+```
+
+make new variables with longitude and latitude byt narrowing it down to Downtown to see results grouped by years
+```{r}
+#make new variables with longitude and latitude but only looking at Downtown, seeing results grouped by years
+mydata %>%
+  filter(district == 'Downtown') %>%
+  group_by(reported_year) %>%
+  mutate(mean_lat = mean(latitude)) %>%
+  mutate(mean_lon = mean(longitude))
+```
+
+```{r}
+mydata <- read.csv("incidents.csv")
+```
+
+We're splitting the dataset based on the reported year
+```{r}
+#splits big dataset by reported year
+newdata <- split(mydata, f = mydata$reported_year)
+```
+
+Since the data is split by reported year, we're calling the dataset with the year 2017.
+```{r}
+#use double brackets to use the piece of the dataset you split up
+newdata[['2017']]
+```
+
+Now we're naming the dataset of 2017
+```{r}
+a <- newdata[['2017']]
+```
+
+We're getting the relevant variables of dataset a
+```{r}
+#anaother way to select columns
+a <- a[,12:19]
+```
+
+We're making a histogram of the reported hours with 10 bars
+```{r}
+#make a histogram of reported hour
+hist(a$reported_hour, col = heat.colors(10))
+```
+
+We're replacing 0 values with NA and seeing all of the completed rows
+```{r}
+#enter missing values as 0
+a[a == 0.00000] <- NA
+
+#show completed rows
+rowscomplet <- complete.cases(a)
+a = a[rowscomplet,]
+
+paged_table(a)
+```
+
+We're selecting the variables with only the coordinates.
+```{r}
+#complete code before the last chunk
+mypoints <- a[,7:8]
+head(mypoints)
+```
+
+We're mapping with the leaflet package. So we get the map from Google Maps, we set the view and plot the points on the maps
+```{r}
+#read in leaflet
+#go back to notes to complete code
+library(leaflet)
+
+mypoints %>% leaflet() %>% addTiles() %>% #gets map from Google Maps
+  setView(lng = -78.7, lat = 35.7, zoom = 10) %>%
+  addCircleMarkers(data = a, radius = 1, color = "red")
+```
+
