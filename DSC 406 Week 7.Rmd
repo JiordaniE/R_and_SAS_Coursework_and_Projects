@@ -1,0 +1,44 @@
+---
+title: "DSC 406 Week 7"
+author: "Jiordani Etienne"
+date: "2024-02-21"
+output: html_document
+---
+In this code, I used the expenses dataset to do special summary statistics using the psych package, which tells use the number of observations, range, skew, and standard error. DescribeBy is used to narrow the dataset down. 
+
+
+We're reading in tidyverse and rmarkdown to write comfortably in R Markdown
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rmarkdown)
+```
+
+We're reading in the expenses file
+```{r}
+ds <- read.csv("expenses.csv")
+```
+
+We are getting the summary of the all f the variables using base R
+```{r}
+#get summary of dataset
+summary(ds)
+```
+We are using the "describe" function from the psych package to get a summary of the data. The "describe" function provides summary stiatistics that are not in base R like trimmed, mad, and skew. It gives us all of the summaries of the variables in a paged table format in R Markdown.
+```{r}
+#describes summary statistics including trimmed, mad, skew, range, kurtosis
+library(psych)
+describe(ds)
+```
+
+We're using the "describeBy" function is used to give summary statistics of the data set, but it's grouped by a chosen variable, such as age inn this example. However many ages we have is how many summaries we get.
+```{r}
+describeBy(ds,group = ds$age)
+```
+
+Here, we're using the "dfSummary" function from the summarytools package. The "dfSummary" function gives us the summary of the data set in an HTML format. It even has stuff not available in base R like graphing the distribution of the variables, how many missing values are in each avariable, the amount of distinct values in each variable.
+```{r}
+library(summarytools)
+results <- dfSummary(ds)
+view(results)
+```
+
