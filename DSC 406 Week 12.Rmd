@@ -1,0 +1,41 @@
+---
+title: "DSC 406 Week 12"
+author: "Jiordani Etienne"
+date: "2024-03-27"
+output: html_document
+---
+I used the GGally package to making a matrix with a bunch of graphs of gender distribution of age, education, etc. Then I made summary statistics for each variable with the tableone package looking at mean and standard deviation. Then I made summary statistics with every variable focusing on age and year.
+
+Below is where packages are read in.
+```{r eval = TRUE, echo = TRUE}
+library(ggplot2)
+library(GGally) #for ggpairs function below
+```
+
+Below is where the expenses dataset is read in, and a plots are displayed based on gender. It looks like overall, men have more of a spread in the cost of education and there are more women in the dataset than men.
+```{r eval = TRUE, echo = TRUE}
+ds <- read.csv("expenses.csv")
+
+#call columns 5 to 8 and add colors to categorical variables
+ds[,5:8] %>% ggpairs(ggplot2::aes(colour = gender)) #makes color show up with different genders
+
+#or you can try ds[,4:8] with race
+```
+
+Below is a report with summary statistics of each variable. Most people in the dataset are Asian and white. The highest mean value of expenses is educatin at a value of $527.87.
+```{r eval = TRUE, echo = TRUE}
+library(tableone)
+#make a table with summary statistics with percentages, mean, SD of each variable with out p-value
+mytable <- CreateTableOne(data = ds)
+mytable
+```
+
+Below is a table with standardized mean differences. 
+```{r eval = TRUE, echo = TRUE}
+#make table like before but with Standardized Mean Difference, which is a hypothesis, shows the differences in the means
+mylist <- c("Phone", "Food", "Education", "Beauty", "Health", "age", "year")
+categ <- c("age", "year")
+table1 <- CreateTableOne(data = ds, vars = mylist, factorVars = categ, 
+                         strata = "year", smd = T) #strata stratifies by year
+table1
+```
