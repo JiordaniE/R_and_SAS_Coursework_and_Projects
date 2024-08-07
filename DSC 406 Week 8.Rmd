@@ -1,0 +1,48 @@
+---
+title: "Week 8"
+author: "Jiordani Etienne"
+date: "2024-02-28"
+output: html_document
+---
+I used many ways to summarize and visualize data. I used dlookr to see how the data is distributed. I used skimr to see how many variables are missing and generate summary statistics. I also used the explore package to make an interactive dashboard of all the variables.
+
+Here is where I read in all of the packages I need.
+```{r eval = TRUE, echo = TRUE}
+library(tidyverse)
+library(rmarkdown)
+```
+
+Below is where I read in the dataset Expenses
+```{r eval = TRUE, echo = TRUE}
+ds<- read.csv("expenses.csv")
+```
+
+Below is where I make a distribution of the variables Age, Health, Education, Food, and Beauty. Food, Beauty, and Health have Q-Q Plots that have points that follow the line, which reveals that they are normally distributed.
+```{r eval = TRUE, echo = TRUE}
+library(dlookr)
+
+#makes distributions of the variables
+ds %>% select(age:Health) %>% plot_normality()
+```
+
+Below makes a report of all of my variables in terms of summary statistics. The report shows that I have 40,163 rows and 10 columns. It also shows that the median cost for food is $518.04.
+```{r eval = TRUE, echo = TRUE}
+library(skimr)
+
+#checks how many missing variables per variable
+results <- skim(ds)
+results
+
+#p50 is the median
+
+#hist shows histogram for each variable
+```
+
+Below makes interactive graphs.I see with age, cost of education is right skewed, and education costs about the same, however, the younger they are, the cheaper it may be for the individuals by population density.
+```{r eval = TRUE, echo = TRUE}
+library(explore)
+
+#gives an interactive graphs depending on variables. Makes bar charts, decision tree, an overview of all variables, box plots, density plots, 
+explore(ds) #you can't knit, you need to print through your browser
+```
+
