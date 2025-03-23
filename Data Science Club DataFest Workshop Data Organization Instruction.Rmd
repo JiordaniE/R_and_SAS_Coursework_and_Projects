@@ -1,0 +1,129 @@
+---
+title: "Data Science Club Workshop 1"
+author: "Jiordani Etienne"
+date: "2025-02-26"
+output: html_document
+---
+
+The code is for instruction. The code is the fist part of a workshop, and it focuses on data cleaning and organization.
+
+```{r}
+library(rmarkdown)
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+#reading in dataset
+college_data <- read.csv("Collegescorecard.csv")
+```
+
+```{r}
+#narrowing down the variables using the "select" function
+college_data = college_data %>%
+  select(c(NPT4_PUB, NPT4_PRIV, PPTUG_EF, C150_L4_POOLED_SUPP, OPEFLAG, PREDDEG, UGDS_WHITE, UGDS_BLACK, UGDS_HISP, UGDS_ASIAN, HBCU, ADM_RATE, LATITUDE, LONGITUDE, STABBR))
+```
+
+```{r}
+#lengthen names
+college_data = college_data %>% 
+  rename(cost_of_public_school = NPT4_PUB, cost_of_private_school = NPT4_PRIV, fully_enrolled = PPTUG_EF, graduation_rate = C150_L4_POOLED_SUPP, no_financial_aid = OPEFLAG, predominate_award = PREDDEG, white_college = UGDS_WHITE, black_college = UGDS_BLACK, hispanic_college = UGDS_HISP, asian_college = UGDS_ASIAN, admission_rate = ADM_RATE, school_state = STABBR, latitude_school = LATITUDE, longitude_school = LONGITUDE)
+```
+
+```{r}
+#convert variables to numerical variables to get "NA" rather than "NULL" values
+college_data[,1:14] = lapply(college_data[,1:14], as.numeric)
+```
+
+```{r}
+#converts list to dataset
+  if (is.list(college_data)) {
+  college_data = as.data.frame(college_data)}
+```
+
+"Paged_Table" is from the rmarkdown package and it lets you quickly look at your table. You are able to view all the columns and rows of your dataset.
+```{r}
+#quickly look at the table
+paged_table(college_data)
+```
+
+In the code chunk below, we use the "Select" function to narrow down the variables. Keep in mind the difference between "<-" and "=." The "<-" is creating an object found in your environment, and "=" is saving the same object and makes the changes below. The "%>%" sign is basically "and then" in R language.
+```{r}
+college_data = college_data %>%
+  select(c(cost_of_public_school, graduation_rate, white_college, black_college, hispanic_college, asian_college, school_state))
+```
+
+```{r}
+paged_table(college_data)
+```
+
+In the chunk below, we're renaming variables.
+```{r}
+#renaming varaibles
+college_data = college_data %>% 
+  rename(cost_pub = cost_of_public_school, grad_rate = graduation_rate, white = white_college, black = black_college, hispanic = hispanic_college, asian = asian_college, state = school_state)
+```
+
+In this code chunk, we are going to clean data by removing rows. We will begin by checking if there are any missing value.
+```{r}
+#we are finding out whether the dataset has missing values. If True, it has missing values, if False, the dataset has no missing values.
+any(is.na(college_data))
+```
+
+It turns out we have missing values, so now we have different methods of cleaning the data. In this example, we will remove "NA" values. We use the "na.omit" function to remove entire rows with missing values.
+```{r}
+#getting rid of rows with missing values
+college_data = college_data %>%
+  na.omit(college_data)
+```
+
+```{r}
+paged_table(college_data)
+```
+
+Subsetting rows is when you filter out the rows you don't want, and keep the rows you want under a condition. In this case, we will subset rows to only include NC. Here we make a dataset as a new object. Then we use the "Filter" function to show that we are focusing on the rows of the dataset. We use "==" to indicate to check where the column "state" has rows labeled "NC."
+```{r}
+#creating a new dataset and filtering so it only shows schools in NC
+college_data_nc <- college_data %>% filter(state == "NC")
+```
+
+```{r}
+paged_table(college_data_nc)
+```
+
+Now we're going to use the filter function to see schools that have at least .5 or 50% of its students that are black using the filter function.
+```{r}
+#subsetting rows so we have at least 50% of black students in the school with a new dataset
+college_data_black <- college_data %>% filter(black >= .5) #if you want to see schools that have greater than 50%, you would replace ">=" with >.
+```
+
+```{r}
+paged_table(college_data_black)
+```
+
+
+We're going to bring new columns in, which are graduation rate and admission rate, creating a new table.
+```{r}
+#using readxl to read Excel spreadsheets
+library(readxl)
+edu_data <- read_excel("Education_Demo.xlsx")
+plane_data <- read_excel("Southwest_Airline_Flights.xlsx")
+```
+
+```{r}
+paged_table(edu_data)
+```
+
+```{r}
+paged_table(plane_data)
+```
+
+We are using "left_join" from the dplyr package. In order for it to work, you need one column in both datasets that uniquely identify each row, like how there is a unique state for each row in our example.
+```{r}
+combined_data <- edu_data %>%
+  left_join(plane_data, by = "State")
+```
+
+```{r}
+paged_table(combined_data)
+```

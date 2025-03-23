@@ -1,0 +1,119 @@
+---
+title: "Data Science Club DataFest Workshop Data Analysis"
+author: "Jiordani Etienne"
+date: "2025-03-04"
+output: html_document
+---
+The code is for instruction for the 2nd part of a workshop, this time, we're focusing on data analysis. The code focus on multiple linear regression, summary statistics, and data visualization.
+
+
+We're going to begin doing some analysis with R.
+```{r setup, include=FALSE}
+#installing packages
+library(rmarkdown)
+library(tidyverse)
+```
+
+```{r}
+#downloading a dataset "cars_data," not the "cars" dataset
+cars_data <- read.csv("cars_data.csv")
+```
+
+```{r}
+#view the dataset
+paged_table(cars_data)
+```
+
+Now, we're going to narrow down the variables using the select function.
+```{r}
+#narrowing down the variables
+cars_data = cars_data %>%
+  select(c(Dimensions.Length, Fuel.Information.City.mpg, Identification.Year, Engine.Information.Engine.Statistics.Horsepower))
+```
+
+```{r}
+#renaming variables
+cars_data = cars_data %>%
+  rename(length = Dimensions.Length, city_mpg = Fuel.Information.City.mpg, year = Identification.Year, horsepower = Engine.Information.Engine.Statistics.Horsepower)
+```
+
+```{r}
+paged_table(cars_data)
+```
+
+We are subsetting the dataset for only cars made in 2009 to avoid having to account for time for the regression.
+```{r}
+#filter for cars in 2009
+cars_data_2009 <- cars_data %>% filter(year == 2009)
+```
+
+```{r}
+paged_table(cars_data_2009)
+```
+
+
+Here, is where we will construct a multiple linear regression model, where the dependent variable is the "city_mpg" and the independent variables are "horsepower" and "length" of the vehicle. As you can see, below we are using the "car" package to conduct the linear regression. Notice how the p-values for length and horsepower are below .05, that means it is statistically significant. we use Anova from the car package because it's using Type II, which is good when the order of the variables doesn't matter. You can't visualize a multiple linear regression, but you can visualize a simple linear regression.
+```{r}
+library(car) #reading in the car package
+multi_lin <- lm(city_mpg ~ horsepower + length, data = cars_data_2009) #making a multiple linear regression model
+car::Anova(multi_lin)
+```
+
+Below is where we run the same regression model but with base R, so we can get the adjusted R squared and slopes of the model. The adjusted R squared just tells us the percentage of which the model explains the change in the dependent variable, which is city_mpg. For the slopes, we pay attention to both the number and the signs. Notice the p-values are same in both tests. The "Estimate" is where you get the slope.
+```{r}
+#making a multiple liear regression model to get the slope and adjusted R squared
+multi_lin <- lm(city_mpg ~ horsepower + length, data = cars_data_2009)
+summary(multi_lin)
+```
+
+Here is where we will construct a log-lin model by doing a log transformation on our original multiple linear regression model. The model will tell us the percent change in the dependent variable, given a 1 unit increase in the independent variables. This doesn't tell you the chance of the event occurring. We do the log transformation by log-ing the dependent variable, and keeping the independent variables the same.
+```{r}
+#making a log-lin model
+multi_log <- lm(log(city_mpg) ~ horsepower + length, data = cars_data_2009)
+summary(multi_log)
+```
+
+Here is where we will use the function "describe" from the psych package. It is a lot better than the "summary" function from base R.
+```{r}
+library(psych)
+describe(cars_data_2009)
+```
+
+Here is where we start visualizing our data. Below, we're making a histogram, which can show the spread and skewness of the data. We must begin by importing the "ggplot2" package. Notice how we use the "+" sign to indicate the next task R needs to carry out. The "+" sign is equivalent to the "%>%" sign in tidyverse.
+```{r}
+library(ggplot2) #read in package
+hist_horse <- ggplot(cars_data, aes(x = horsepower)) + #make an object for the histogram, and call the package. Putting x tells R to arrange it horizontally, and aes are the common characteristics of the graphs
+  geom_histogram(fill = "darkblue", col=I("white")) #we select the histogram diagram, and select the colors
+plot(hist_horse) #displaying the histogram
+```
+As you can see, we selected the colors from above. Here are some resources for the ggplot2 package:
+ggplot2 Cheatsheet: https://rstudio.github.io/cheatsheets/data-visualization.pdf
+R Color Pallet: https://r-charts.com/colors/
+
+We are going to work with time series data to make a line graph.
+```{r}
+#reading in the readxl package
+library(readxl)
+coll_attend <- read_excel('College_Time.xlsx') #reading in the dataset
+```
+
+This is just a view of the data.
+```{r}
+paged_table(coll_attend)
+```
+
+Since we have two groups we are showing, we need to make two colors identify with Female_College and Male_College. 
+```{r}
+colors <- c("Women" = "red", "Men" = "blue")
+```
+
+Below is where we are going to create the line graphs. We will call the geom_line from the ggplot2 Cheatsheet.
+```{r}
+coll_line <- ggplot(coll_attend) + #we're identifying the ggplot function
+  geom_line(aes(x = Time, y = Female_College, group = 1,  color = "Women"), linewidth = 2) + #this is the first line we're making, where we identify the x axis to be time and y axis to be Female_College, then we determine the color of Female_College, which was done in the previous chunk. Finally, we determine the width of the line. The line type is automatically set to 1, but you can choose it from the cheetsheet.
+  geom_line(aes(x = Time, y = Male_College, group = 1, color = "Men"), linetype = 6, linewidth = 2) + #the second line identifies the Male_College line, where we decide to use the two dash line type (6), and keep the same width as the first line graph
+  labs(title = "Line Chart of the Percentage of People with at Least a Bachelor's", #this is where we label the entire graph
+       x = "Time (in years)", y = "% of 25+ Year Olds with at Least a Bachelor's,", color = "Legend") + #this is where we label the x-axis and y-axis, and make a legend, which is identified by the color
+   scale_color_manual(values = colors) #here is where we map the data to the aesthetics labeled as aes, which was identified in the chunk above.
+plot(coll_line)
+```

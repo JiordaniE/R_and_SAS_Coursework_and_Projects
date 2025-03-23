@@ -1,0 +1,41 @@
+---
+title: "Data Science Club Workshop 1"
+author: "Jiordani Etienne"
+date: "2025-02-26"
+output: html_document
+---
+
+```{r}
+library(rmarkdown)
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+#reading in dataset
+college_data <- read.csv("Collegescorecard.csv")
+```
+
+```{r}
+#narrowing down the variables using the "select" function
+college_data = college_data %>%
+  select(c(NPT4_PUB, NPT4_PRIV, PPTUG_EF, C150_L4_POOLED_SUPP, OPEFLAG, PREDDEG, UGDS_WHITE, UGDS_BLACK, UGDS_HISP, UGDS_ASIAN, HBCU, ADM_RATE, LATITUDE, LONGITUDE, STABBR))
+```
+
+```{r}
+#lengthen names
+college_data = college_data %>% 
+  rename(cost_of_public_school = NPT4_PUB, cost_of_private_school = NPT4_PRIV, fully_enrolled = PPTUG_EF, graduation_rate = C150_L4_POOLED_SUPP, no_financial_aid = OPEFLAG, predominate_award = PREDDEG, white_college = UGDS_WHITE, black_college = UGDS_BLACK, hispanic_college = UGDS_HISP, asian_college = UGDS_ASIAN, admission_rate = ADM_RATE, school_state = STABBR, latitude_school = LATITUDE, longitude_school = LONGITUDE)
+```
+
+```{r}
+#convert variables to numerical variables to get "NA" rather than "NULL" values
+college_data[,1:14] = lapply(college_data[,1:14], as.numeric)
+```
+
+```{r}
+#converts list to dataset
+  if (is.list(college_data)) {
+  college_data = as.data.frame(college_data)}
+```
+

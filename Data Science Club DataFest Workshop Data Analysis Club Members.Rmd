@@ -1,0 +1,47 @@
+---
+title: "Data Science Club DataFest Workshop Data Analysis"
+author: "Jiordani Etienne"
+date: "2025-03-04"
+output: html_document
+---
+
+We're going to begin doing some analysis with R.
+```{r setup, include=FALSE}
+#installing packages
+library(rmarkdown)
+library(tidyverse)
+```
+
+```{r}
+#downloading a dataset "cars_data," not the "cars" dataset
+cars_data <- read.csv("cars_data.csv")
+```
+
+```{r}
+#view the dataset
+paged_table(cars_data)
+```
+
+Now, we're going to narrow down the variables using the select function.
+```{r}
+#narrowing down the variables
+cars_data = cars_data %>%
+  select(c(Dimensions.Length, Fuel.Information.City.mpg, Identification.Year, Engine.Information.Engine.Statistics.Horsepower))
+```
+
+```{r}
+#renaming variables
+cars_data = cars_data %>%
+  rename(length = Dimensions.Length, city_mpg = Fuel.Information.City.mpg, year = Identification.Year, horsepower = Engine.Information.Engine.Statistics.Horsepower)
+```
+
+```{r}
+paged_table(cars_data)
+```
+
+We are subsetting the dataset for only cars made in 2009 to avoid having to account for time for the regression.
+```{r}
+#filter for cars in 2009
+cars_data_2009 <- cars_data %>% filter(year == 2009)
+```
+
